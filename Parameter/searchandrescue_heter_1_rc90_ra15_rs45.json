@@ -1,0 +1,260 @@
+{
+    "communication_net": {
+        "rep_gain": {
+            "action_sensing": [
+                0,
+                300000
+            ],
+            "sensing_action": [
+                0,
+                300000
+            ],
+            "action_relay": [
+                0,
+                300000
+            ],
+            "sensing_relay": [
+                0,
+                300000
+            ],
+            "action_action": [
+                0,
+                300000
+            ],
+            "sensing_sensing": [
+                0,
+                300000
+            ],
+            "relay_action": [
+                0,
+                300000
+            ],
+            "relay_sensing": [
+                0,
+                300000
+            ],
+            "relay_relay": [
+                0,
+                300000
+            ]
+        },
+        "align_gain": {
+            "action_sensing": [
+                0,
+                1000
+            ],
+            "sensing_action": [
+                0,
+                1000
+            ],
+            "action_relay": [
+                0,
+                1000
+            ],
+            "sensing_relay": [
+                0,
+                1000
+            ],
+            "action_action": [
+                0,
+                1000
+            ],
+            "sensing_sensing": [
+                0,
+                1000
+            ],
+            "relay_action": [
+                0,
+                1000
+            ],
+            "relay_sensing": [
+                0,
+                1000
+            ],
+            "relay_relay": [
+                0,
+                1000
+            ]
+        },
+        "attraction_gain": {
+            "action_sensing": [
+                0,
+                100
+            ],
+            "sensing_action": [
+                0,
+                100
+            ],
+            "action_relay": [
+                0,
+                100
+            ],
+            "sensing_relay": [
+                0,
+                100
+            ],
+            "action_action": [
+                0,
+                100
+            ],
+            "sensing_sensing": [
+                0,
+                100
+            ],
+            "relay_action": [
+                0,
+                100
+            ],
+            "relay_sensing": [
+                0,
+                100
+            ],
+            "relay_relay": [
+                0,
+                100
+            ]
+        }
+    },
+    "sensing_net": {
+        "rep_gain": {
+            "environmentBoundary_relay": [
+                0,
+                300000
+            ],
+            "environmentTask_relay": [
+                0,
+                300000
+            ],
+            "environmentTask_sensing": [
+                0,
+                300000
+            ],
+            "environmentBoundary_sensing": [
+                0,
+                300000
+            ]
+        },
+        "align_gain": {
+            "environmentBoundary_relay": [
+                0,
+                1000
+            ],
+            "environmentTask_relay": [
+                0,
+                1000
+            ],
+            "environmentTask_sensing": [
+                0,
+                1000
+            ],
+            "environmentBoundary_sensing": [
+                0,
+                1000
+            ]
+        },
+        "attraction_gain": {
+            "environmentBoundary_relay": [
+                0,
+                100
+            ],
+            "environmentTask_relay": [
+                0,
+                100
+            ],
+            "environmentTask_sensing": [
+                0,
+                100
+            ],
+            "environmentBoundary_sensing": [
+                0,
+                100
+            ]
+        }
+    },
+    "action_net": {
+        "rep_gain": {
+            "action_environmentTask": [
+                0,
+                300000
+            ],
+            "action_environmentBoundary": [
+                0,
+                300000
+            ],
+            "environmentBoundary_action": [
+                0,
+                300000
+            ],
+            "environmentTask_action": [
+                0,
+                300000
+            ]
+        },
+        "align_gain": {
+            "action_environmentTask": [
+                0,
+                1000
+            ],
+            "action_environmentBoundary": [
+                0,
+                1000
+            ],
+            "environmentBoundary_action": [
+                0,
+                1000
+            ],
+            "environmentTask_action": [
+                0,
+                1000
+            ]
+        },
+        "attraction_gain": {
+            "action_environmentTask": [
+                0,
+                100
+            ],
+            "action_environmentBoundary": [
+                0,
+                100
+            ],
+            "environmentBoundary_action": [
+                0,
+                100
+            ],
+            "environmentTask_action": [
+                0,
+                100
+            ]
+        }
+    },
+    "self_drive": {
+        "self_drive_velocity": {
+            "relay": [
+                0,
+                20
+            ],
+            "sensing": [
+                0,
+                20
+            ],
+            "action": [
+                0,
+                20
+            ]
+        },
+        "self_drive_gain": {
+            "relay": [
+                0,
+                1000
+            ],
+            "sensing": [
+                0,
+                1000
+            ],
+            "action": [
+                0,
+                1000
+            ]
+        }
+    }
+}

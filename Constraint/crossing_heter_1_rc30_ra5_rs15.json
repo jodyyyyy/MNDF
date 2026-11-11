@@ -1,0 +1,32 @@
+{
+    "communication_net": [
+        "action_sensing",
+        "sensing_action",
+        "action_relay",
+        "sensing_relay",
+        "action_action",
+        "sensing_sensing",
+        "relay_action",
+        "relay_sensing",
+        "relay_relay"
+    ],
+    "logic_net": [
+        "relay_action",
+        "environmentBoundary_sensing",
+        "sensing_relay",
+        "sensing_action",
+        "environmentObstacle_sensing"
+    ],
+    "sensing_net": [
+        "environmentBoundary_relay",
+        "environmentBoundary_sensing",
+        "environmentObstacle_relay",
+        "environmentObstacle_sensing"
+    ],
+    "action_net": [
+        "environmentBoundary_action",
+        "action_environmentObstacle",
+        "environmentObstacle_action",
+        "action_environmentBoundary"
+    ]
+}

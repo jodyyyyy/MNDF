@@ -1,0 +1,89 @@
+{
+  "communication_net": {
+    "rep_gain": {
+      "action_sensing": 68754.9296875,
+      "sensing_action": 138563.046875,
+      "action_relay": 109202.71875,
+      "sensing_relay": 93681.796875,
+      "action_action": 283779.09375,
+      "sensing_sensing": 294454.8125,
+      "relay_action": 64173.1875,
+      "relay_sensing": 57236.6875,
+      "relay_relay": 216509.0625
+    },
+    "align_gain": {
+      "action_sensing": 216.19436645507812,
+      "sensing_action": 633.3121337890625,
+      "action_relay": 749.0872802734375,
+      "sensing_relay": 573.2938232421875,
+      "action_action": 987.0076904296875,
+      "sensing_sensing": 871.83642578125,
+      "relay_action": 842.0732421875,
+      "relay_sensing": 680.690185546875,
+      "relay_relay": 71.24222564697266
+    },
+    "attraction_gain": {
+      "action_sensing": 94.96434020996094,
+      "sensing_action": 95.2650375366211,
+      "action_relay": 81.14686584472656,
+      "sensing_relay": 76.40106201171875,
+      "action_action": 27.416797637939453,
+      "sensing_sensing": 97.7142105102539,
+      "relay_action": 2.4253101348876953,
+      "relay_sensing": 3.254542112350464,
+      "relay_relay": 40.48170852661133
+    }
+  },
+  "sensing_net": {
+    "rep_gain": {
+      "environmentBoundary_relay": 152070.84375,
+      "environmentTask_relay": 81964.796875,
+      "environmentTask_sensing": 117674.5,
+      "environmentBoundary_sensing": 56642.703125
+    },
+    "align_gain": {
+      "environmentBoundary_relay": 505.1781005859375,
+      "environmentTask_relay": 609.7216796875,
+      "environmentTask_sensing": 998.7343139648438,
+      "environmentBoundary_sensing": 871.8773803710938
+    },
+    "attraction_gain": {
+      "environmentBoundary_relay": 8.441255569458008,
+      "environmentTask_relay": 97.04932403564453,
+      "environmentTask_sensing": 74.05412292480469,
+      "environmentBoundary_sensing": 9.753715515136719
+    }
+  },
+  "action_net": {
+    "rep_gain": {
+      "action_environmentTask": 116653.375,
+      "action_environmentBoundary": 232684.8125,
+      "environmentBoundary_action": 291297.8125,
+      "environmentTask_action": 17800.341796875
+    },
+    "align_gain": {
+      "action_environmentTask": 118.91691589355469,
+      "action_environmentBoundary": 170.6564483642578,
+      "environmentBoundary_action": 819.5985107421875,
+      "environmentTask_action": 451.96343994140625
+    },
+    "attraction_gain": {
+      "action_environmentTask": 18.663818359375,
+      "action_environmentBoundary": 59.59127426147461,
+      "environmentBoundary_action": 2.833118200302124,
+      "environmentTask_action": 13.423013687133789
+    }
+  },
+  "self_drive": {
+    "self_drive_velocity": {
+      "relay": 8.528632164001465,
+      "sensing": 19.410764694213867,
+      "action": 14.193967819213867
+    },
+    "self_drive_gain": {
+      "relay": 778.2734375,
+      "sensing": 189.880615234375,
+      "action": 65.23822784423828
+    }
+  }
+}
