@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import cma
@@ -128,8 +129,12 @@ def optimize(args, settings):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("simulate", "optimize"))
+    if len(sys.argv) > 1 and sys.argv[1] == "generate":
+        from .scenes import main as generate_main
+        generate_main(sys.argv[2:])
+        return
+    parser = argparse.ArgumentParser(description=__doc__, epilog="Scene generation: python -m mndf generate --help")
+    parser.add_argument("command", choices=("simulate", "optimize", "generate"))
     parser.add_argument("--config", required=True, help="One of the 54 configuration stems in optimized_params/")
     parser.add_argument("--data-dir", type=Path, help="Directory containing NodeInitialLocationData/ and TaskInfo/")
     parser.add_argument("--device", default="cuda:0" if torch.cuda.is_available() else "cpu")
