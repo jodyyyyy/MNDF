@@ -1,15 +1,28 @@
-# MNDF
+# Multilayer Network Dynamics Framework (MNDF)
 
-MNDF simulates heterogeneous robot swarms with a shared multilayer network model.
-It includes two tasks, runnable example scenes, optimized controllers, and a
-CMA-ES workflow for training new controllers.
+## Framework overview
 
-- **Crossing** — guide a swarm through a curved, obstacle-filled channel.
-- **Search-and-Rescue** — deploy a swarm to locate and service distributed tasks.
+MNDF models a heterogeneous robot swarm as an interdependent multilayer network.
+Each layer represents a distinct type of interaction, and dependencies between
+layers encode task-level logic. Robots follow simple Reynolds-style local
+interaction rules, whose strengths are optimized with CMA-ES for a given task.
+This lets heterogeneous robots coordinate without centralized task allocation.
 
-![Crossing example showing swarm configurations, channel trajectories, and metrics](docs/images/crossing.png)
+### System architecture
+
+The multilayer topology determines which interactions are active at each time
+step. Node dynamics combine self-propulsion with those interactions to generate
+a sequence of network snapshots. Task-specific evaluation functions score the
+resulting swarm behavior, and CMA-ES uses the scores to update the population
+of candidate dynamics parameters.
+
+![System architecture linking multilayer network dynamics, task-specific evaluation, and CMA-ES optimization](docs/images/SystemFramework.png)
+
 
 ## Quick start
+
+This repository includes runnable example scenes, optimized controllers, and a
+CMA-ES workflow for training new controllers.
 
 Use Python 3.10 and run the commands from the repository root.
 
@@ -25,58 +38,34 @@ terms and objective as JSON. Use `--output ../fitness.json` to save them. For a
 full run, remove `--t-max 2`. Use `--device cuda:0` with a CUDA-enabled PyTorch
 installation for full runs and optimization.
 
-## Visualize a simulation
+## Run a simulation
 
-After installing the dependencies above, render either bundled scene.
-The commands below use the full 100-second Crossing and 400-second
-Search-and-Rescue horizons. For a quick CPU preview, replace
-`--device cuda:0` with `--device cpu --t-max 2`.
+Run either bundled scene with its optimized parameters. The simulator loads
+the matching controller from `optimized_params/` using the name passed to
+`--config`.
+
+```bash
+python -m mndf simulate --config crossing_heter_1_rc60_ra10_rs30 --device cuda:0
+python -m mndf simulate --config searchandrescue_heter_1_rc60_ra10_rs30 --device cuda:0
+```
+
+`simulate` prints the fitness terms and objective as JSON. The default
+simulation time is 100 seconds for Crossing and 400 seconds for
+Search-and-Rescue.
+
+To generate a trajectory figure, use `visualize` in place of `simulate` and
+set `--output` to a new directory. The directory receives `trajectories.png`
+with robot paths and metric curves, along with `fitness.json`.
 
 ```bash
 python -m mndf visualize --config crossing_heter_1_rc60_ra10_rs30 --device cuda:0 --output outputs/crossing
-python -m mndf visualize --config searchandrescue_heter_1_rc60_ra10_rs30 --device cuda:0 --output outputs/search-and-rescue
 ```
 
-Choose a new output directory for each run. The command also works on a
-headless server and writes two files.
-
-- `trajectories.png` shows robot paths colored by speed, intermediate swarm
-  configurations for Crossing, and stage-by-stage paths and completed tasks
-  for Search-and-Rescue. The figure includes time series for collision, task,
-  gathering, and connectivity measures, plus correlation for Crossing.
-- `fitness.json` contains the aggregated fitness terms and objective for the run.
-
-The command reuses `visualize_state_trajectories` from the original Swarm
-visualization code, included in [`mndf/Visualization_shared.py`](mndf/Visualization_shared.py).
-
-Both `simulate` and `visualize` accept `--data-dir` for generated or custom scenes,
-`--scene` for the scene index (default 1), and `--params` for a custom controller JSON.
-
-![Search-and-Rescue example showing trajectories and task completion by stage](docs/images/search-and-rescue.png)
-
-Both previews use the bundled scene 1, the supplied `rc60_ra10_rs30`
-parameters, and the full simulation horizon. The Search-and-Rescue figure
-ends when the last task is completed.
-
-## Model and parameter sets
-
-At each integration step, MNDF builds communication and sensing links using
-node types and interaction ranges, then derives logic and action links from
-the network. Communication keeps at most 30 nearest eligible neighbors per
-relay source and 10 per ordinary source. The simulator combines repulsion,
-alignment, attraction, and self-drive to advance the robot states. Both tasks
-use this implementation in [`mndf/dynamics.py`](mndf/dynamics.py).
-
-Crossing uses a fixed self-drive direction `(1, 0)` and collision shaping
-coefficient `0.00003`. Search-and-Rescue uses each robot’s current heading,
-a collision radius of 3, and coefficient `0.001`. The supplied
-Search-and-Rescue controllers come from the OriginalCollision / FixInitial
-experiment. Both tasks use a 0.125-second integration step.
-
-Each task ships 27 controllers with 57 optimized variables per controller.
-The grid covers relay communication range `rc = 30, 60, 90`, action range
-`ra = 5, 10, 15`, and sensing range `rs = 15, 30, 45`. Ordinary communication
-range stays at 30. The configuration name encodes the three ranges.
+Both commands use scene 1 from `examples/` by default. To run a different
+configuration or scene, supply the matching inputs with `--data-dir` and
+select the scene index with `--scene`. Use `--params` to load a different
+optimized controller JSON. For a short CPU run, replace `--device cuda:0`
+with `--device cpu --t-max 2`.
 
 ## Generate scenes
 
