@@ -1,9 +1,12 @@
-"""Small, portable entry point for simulation and CMA-ES optimization."""
+"""Run MNDF simulations, render their results, or optimize controllers with CMA-ES."""
 
 import argparse
 import json
+import math
+import shutil
 import sys
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import cma
 import numpy as np
@@ -53,6 +56,45 @@ def evaluate(net, task, parameters, settings, device, batch_size):
     if not torch.isfinite(result).all():
         raise RuntimeError("Simulation produced non-finite fitness values.")
     return result
+
+
+def render_simulation(net, task, parameter, settings, args, draw_trajectories):
+    scene_type = settings["scene_type_id"]
+    dt = settings["dt"]
+    with TemporaryDirectory(prefix="mndf-visualize-") as temporary:
+        work = Path(temporary)
+        fitness, series = evaluation_main_batched(
+            scene_type_id=scene_type, dt=dt, net=net, parameters_dicts_batch=[parameter],
+            task_info=task, t_max=settings["t_max"], device=args.device, amp_dtype="bf16",
+            collect_series=True, state_save_count=1, state_save_dir=temporary,
+        )
+        state = torch.load(work / f"state_scene{scene_type}_b000.pt", map_location="cpu", weights_only=True)
+        valid = net.valid_node_mask
+        for key in ("pos", "vel", "task"):
+            state[key] = state[key][:, valid]
+        for key in ("type_id", "group_index"):
+            if key in state:
+                state[key] = state[key][valid]
+        if not torch.isfinite(fitness).all() or not torch.isfinite(state["pos"]).all():
+            raise RuntimeError("Simulation produced non-finite positions or fitness values.")
+        state["scene_type_id"] = scene_type
+        labels = {
+            "connected_largest_component_size": "Max. size",
+            "connected_min_component_size": "Min. size",
+            "connected_component_count": "Components",
+        }
+        # Recorded metrics start after the first integration step.
+        state["metric_series"] = {labels.get(key, key): [float("nan"), *values] for key, values in series[0].items()}
+        figure_path = work / "trajectories.png"
+        stages = (1, 2, 3, 4) if scene_type == 2 else None
+        draw_trajectories(state, dt=dt, config_stage_indices=stages, save_path=str(figure_path), dpi=130)
+        args.output.mkdir(parents=True)
+        try:
+            shutil.copyfile(figure_path, args.output / figure_path.name)
+            save_json(args.output / "fitness.json", dict(zip(METRICS[scene_type], fitness[0].tolist())))
+        except OSError:
+            shutil.rmtree(args.output)
+            raise
 
 
 def parameter_entries(bounds):
@@ -134,13 +176,13 @@ def main():
         generate_main(sys.argv[2:])
         return
     parser = argparse.ArgumentParser(description=__doc__, epilog="Scene generation: python -m mndf generate --help")
-    parser.add_argument("command", choices=("simulate", "optimize", "generate"))
+    parser.add_argument("command", choices=("simulate", "visualize", "optimize", "generate"))
     parser.add_argument("--config", required=True, help="One of the 54 configuration stems in optimized_params/")
     parser.add_argument("--data-dir", type=Path, help="Directory containing NodeInitialLocationData/ and TaskInfo/")
     parser.add_argument("--device", default="cuda:0" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--scene", type=int, default=1)
-    parser.add_argument("--params", type=Path, help="Optional custom optimized parameter file")
-    parser.add_argument("--output", type=Path)
+    parser.add_argument("--params", type=Path, help="Custom parameter file for simulate or visualize")
+    parser.add_argument("--output", type=Path, help="Simulation JSON or output directory for visualize/optimize")
     parser.add_argument("--t-max", type=float)
     parser.add_argument("--generations", type=int)
     args = parser.parse_args()
@@ -149,18 +191,35 @@ def main():
         settings["t_max"] = args.t_max
     if args.generations is not None:
         settings["max_generations"] = args.generations
-    if settings["t_max"] <= 0 or settings["max_generations"] <= 0 or args.scene <= 0:
-        parser.error("Time limit, generation count, and scene index must be positive.")
+    if not math.isfinite(settings["t_max"]) or settings["t_max"] <= 0:
+        parser.error("Time limit must be finite and positive.")
+    if settings["max_generations"] <= 0 or args.scene <= 0:
+        parser.error("Generation count and scene index must be positive.")
     if args.command == "optimize":
         if args.data_dir is None or args.output is None:
             parser.error("Optimization requires --data-dir and --output.")
         if args.params is not None:
-            parser.error("Optimization starts from seeded random parameters; --params is for simulation.")
+            parser.error("Optimization starts from seeded random parameters. Use --params with simulate or visualize.")
         optimize(args, settings)
     else:
+        if args.command == "visualize":
+            if args.output is None or args.output.exists() or args.output.is_symlink():
+                parser.error("Visualization requires --output pointing to a new directory.")
+            try:
+                import matplotlib
+                matplotlib.use("Agg")
+                from .Visualization_shared import visualize_state_trajectories
+            except ModuleNotFoundError as error:
+                if error.name not in {"matplotlib", "networkx", "PIL"}:
+                    raise
+                parser.error("Install plotting dependencies with python -m pip install -r requirements-viz.txt.")
         data_dir = args.data_dir or ROOT / "examples"
         net, task = load_scene(data_dir, args.config, args.scene, settings["scene_type_id"])
         parameter = load_json(args.params or ROOT / "optimized_params" / f"{args.config}.json")
+        if args.command == "visualize":
+            render_simulation(net, task, parameter, settings, args, visualize_state_trajectories)
+            print(f"Saved visualization to {args.output.resolve()}")
+            return
         values = evaluate(net, task, [parameter], settings, args.device, settings["batch_size"])[0].tolist()
         result = dict(zip(METRICS[settings["scene_type_id"]], values))
         print(json.dumps(result, indent=2))
