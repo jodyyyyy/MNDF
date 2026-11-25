@@ -27,13 +27,12 @@ installation for full runs and optimization.
 
 ## Visualize a simulation
 
-Install the optional plotting dependencies, then render either bundled scene.
+After installing the dependencies above, render either bundled scene.
 The commands below use the full 100-second Crossing and 400-second
 Search-and-Rescue horizons. For a quick CPU preview, replace
 `--device cuda:0` with `--device cpu --t-max 2`.
 
 ```bash
-python -m pip install -r requirements-viz.txt
 python -m mndf visualize --config crossing_heter_1_rc60_ra10_rs30 --device cuda:0 --output outputs/crossing
 python -m mndf visualize --config searchandrescue_heter_1_rc60_ra10_rs30 --device cuda:0 --output outputs/search-and-rescue
 ```
@@ -141,6 +140,3 @@ directory. The check still requires ten input scenes.
 - [`optimized_params/`](optimized_params/) — 54 optimized controllers.
 - [`Constraint/`](Constraint/) — allowed interactions between node types.
 - [`Parameter/`](Parameter/) — search bounds for the controller variables.
-- [`PROVENANCE.json`](PROVENANCE.json) — release manifest with original source
-  paths and SHA-256 hashes for the controllers, relation files, and search
-  bounds. The manifest supports research traceability and integrity checks.

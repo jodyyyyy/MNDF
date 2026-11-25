@@ -212,7 +212,7 @@ def main():
             except ModuleNotFoundError as error:
                 if error.name not in {"matplotlib", "networkx", "PIL"}:
                     raise
-                parser.error("Install plotting dependencies with python -m pip install -r requirements-viz.txt.")
+                parser.error("Install dependencies with python -m pip install -r requirements.txt.")
         data_dir = args.data_dir or ROOT / "examples"
         net, task = load_scene(data_dir, args.config, args.scene, settings["scene_type_id"])
         parameter = load_json(args.params or ROOT / "optimized_params" / f"{args.config}.json")

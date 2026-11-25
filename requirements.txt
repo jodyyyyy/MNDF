@@ -2,3 +2,5 @@ numpy==1.26.4
 torch==2.4.0
 cma==4.0.0
 scipy==1.15.2
+matplotlib==3.10.1
+networkx==3.4.2
