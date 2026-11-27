@@ -69,21 +69,21 @@ with `--device cpu --t-max 2`.
 
 ## Generate scenes
 
-Only one example scene per task is bundled. This command generates scenes
-1–10 for the Crossing configuration used in the quick start.
+The generator defaults to scene generalization. Each task uses a fixed initial
+formation of three sub-swarms (63 robots). The channel and obstacles vary across
+Crossing scenes, and the task locations vary across Search-and-Rescue scenes.
+To generate the 128 Test scenes for the Crossing configuration in the quick start:
 
 ```bash
-python -m mndf generate --config crossing_heter_1_rc60_ra10_rs30 --samples 10 --seed 42 --output ../generated-training
+python -m mndf generate --config crossing_heter_1_rc60_ra10_rs30 --samples 128 --seed 42 --output ../generated-test
 ```
 
-Use `--examples --samples 1` to regenerate the two bundled configurations,
-`--task crossing` or `--task searchandrescue` to select a task, or omit the
+Use `--task crossing` or `--task searchandrescue` to select a task, or omit the
 selection flags to generate scenes for all 54 configurations. Each scene uses
-the base seed plus the scene index. A scene’s geometry is shared across
-configurations, while its interaction ranges come from the selected configuration.
-In Search-and-Rescue, robot initialization is fixed and task locations vary
-across scenes. The default base seed 42 reproduces the bundled example inputs
-to numerical tolerance.
+the base seed plus the scene index. Configurations for the same task and scene
+index share their geometry and use their own interaction ranges.
+Use `--training --examples --samples 1 --seed 42` to reproduce the bundled
+quick-start inputs to numerical tolerance.
 
 The generator writes `generation.json` and two directories with the input
 files expected by the simulator.
@@ -103,10 +103,11 @@ reproducibility, run `python -m unittest discover -s tests -v`.
 
 ## Optimize a controller
 
-After generating scenes 1–10, start optimization with the matching
-configuration.
+Generate the ten training scenes with `--training`, then optimize with the
+matching configuration. Crossing training scenes use randomly placed robots.
 
 ```bash
+python -m mndf generate --training --config crossing_heter_1_rc60_ra10_rs30 --samples 10 --seed 42 --output ../generated-training
 python -m mndf optimize --config crossing_heter_1_rc60_ra10_rs30 --data-dir ../generated-training --device cuda:0 --output ../crossing-run
 ```
 

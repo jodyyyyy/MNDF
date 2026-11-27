@@ -1,4 +1,4 @@
-"""Generate reproducible Crossing and fixed-initial Search-and-Rescue inputs."""
+"""Generate reproducible Crossing and Search-and-Rescue scenes."""
 
 import argparse
 import contextlib
@@ -11,10 +11,26 @@ import tempfile
 import numpy as np
 
 from ._scene_fixed import build_agent_node
-from ._scene_parameters import generate_fixed_parameters_searchandresque
+from ._scene_parameters import generate_fixed_parameters_cross, generate_fixed_parameters_searchandresque
 from ._scene_swarm import generate_large_swarm
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def fixed_crossing_robots(rc, ra, rs):
+    """Build the scale-3 test formation at the center of the channel entrance."""
+    parameters = generate_fixed_parameters_cross()
+    upper = parameters["control_points_upper"][0][1]
+    lower = parameters["control_points_lower"][0][1]
+    center_y = (upper + lower) / 2.0
+    return [
+        build_agent_node(
+            node["type"], node["pos"], (5.0, 0.0), parameters,
+            range_override={"rc": rc, "ra": ra, "rs": rs},
+            group_index=node["group_index"],
+        )
+        for node in generate_large_swarm((-center_y, center_y), "heter_1", 3, 5)
+    ]
 
 
 def fixed_search_robots(rc, ra, rs):
@@ -38,12 +54,12 @@ def config_ranges(name):
     return {key: int(next(part[len(key):] for part in parts if part.startswith(key))) for key in ("rc", "ra", "rs")}
 
 
-def generate(output, task="both", config_name=None, samples=1, seed=42, force=False, examples=False):
+def generate(output, task="both", config_name=None, samples=1, seed=42, force=False, examples=False, *, training=False):
     """Write original-format node/task JSON; never overwrite without force=True.
 
-    Samples use seed + scene_index, matching the original initialization code.
-    SR environments consume the original random-initialization sequence before
-    replacing robot states with the deterministic scale-3 FixInitial formation.
+    Samples use seed + scene_index. Generalization scenes use fixed scale-3
+    robot formations. Training uses the original random Crossing formation and
+    the same fixed Search-and-Rescue formation used for generalization.
     """
     if samples < 1:
         raise ValueError("samples must be positive")
@@ -92,11 +108,14 @@ def generate(output, task="both", config_name=None, samples=1, seed=42, force=Fa
                     generate_and_save_nodes_crossing("heter_1", 3, str(staging / "NodeInitialLocationData"), str(staging / "TaskInfo"), samples, variants, seed)
                 else:
                     from ._scene_searchandrescue import generate_and_save_nodes_searchandrescue
-                    generate_and_save_nodes_searchandrescue((0.1, 0.1), "heter_1", 3, str(staging / "NodeInitialLocationData"), str(staging / "TaskInfo"), 60, samples, variants, seed)
-            if current == "searchandrescue":
+                    generate_and_save_nodes_searchandrescue(
+                        (0.1, 0.1), "heter_1", 3, str(staging / "NodeInitialLocationData"),
+                        str(staging / "TaskInfo"), 60, samples, variants, seed, environment_only=True,
+                    )
+            if current == "searchandrescue" or not training:
+                fixed_robots = fixed_search_robots if current == "searchandrescue" else fixed_crossing_robots
                 for name in names:
-                    ranges = config_ranges(name)
-                    fixed = fixed_search_robots(**ranges)
+                    fixed = fixed_robots(**config_ranges(name))
                     for i in range(1, samples + 1):
                         path = staging / "NodeInitialLocationData" / f"{name}_{i}.json"
                         nodes = json.loads(path.read_text())
@@ -111,6 +130,8 @@ def generate(output, task="both", config_name=None, samples=1, seed=42, force=Fa
                 (output / kind / filename).write_bytes((staging / kind / filename).read_bytes())
     manifest = {"base_seed": seed, "scene_seed_rule": "base_seed + scene_index", "samples_per_configuration": samples,
                 "configurations": configs, "swarm_count": 3, "robots_per_swarm": 21,
+                "scene_set": "training" if training else "generalization",
+                "crossing_initialization": "random robot positions" if training else "fixed scale-3 robot states",
                 "searchandrescue_initialization": "fixed scale-3 robot states; original random environments",
                 "json_pairs": len(filenames)}
     (output / "generation.json").write_text(json.dumps(manifest, indent=2) + "\n")
@@ -125,10 +146,11 @@ def main(argv=None):
     parser.add_argument("--examples", action="store_true", help="Generate only the two configurations shipped in examples/")
     parser.add_argument("--samples", type=int, default=1)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--training", action="store_true", help="Generate training inputs with random Crossing robot positions")
     parser.add_argument("--force", action="store_true", help="Replace matching output files")
     args = parser.parse_args(argv)
     try:
-        result = generate(args.output, args.task, args.config, args.samples, args.seed, args.force, args.examples)
+        result = generate(args.output, args.task, args.config, args.samples, args.seed, args.force, args.examples, training=args.training)
     except (ValueError, FileExistsError) as error:
         parser.error(str(error))
     print(json.dumps(result, indent=2))

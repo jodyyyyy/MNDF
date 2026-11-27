@@ -165,7 +165,7 @@ def generate_nodes_within_circle(circle_center, radius, node_counts, min_relay_d
                 generated_nodes.append(new_node)
     return generated_nodes
 
-def generate_and_save_nodes_searchandrescue(circle_center, base_type_name, swarm_count, node_folder='NodeInitialLocationData', taskinfo_folder='TaskInfo', environment_task_count=60, num_samples=10, sensitivity_types=None, base_seed=None):
+def generate_and_save_nodes_searchandrescue(circle_center, base_type_name, swarm_count, node_folder='NodeInitialLocationData', taskinfo_folder='TaskInfo', environment_task_count=60, num_samples=10, sensitivity_types=None, base_seed=None, *, environment_only=False):
     """
     Generate nodes for search-and-rescue and save both node states and task info.
     Args:
@@ -178,6 +178,7 @@ def generate_and_save_nodes_searchandrescue(circle_center, base_type_name, swarm
         num_samples: number of base samples to generate.
         sensitivity_types: list of dicts with keys name, relay_range, action_range, sensing_range.
         base_seed: optional seed to keep environments identical across combinations.
+        environment_only: skip random robot placement when supplying a fixed formation.
     """
     if sensitivity_types is None:
         sensitivity_types = sensitivity_types_get()
@@ -197,11 +198,14 @@ def generate_and_save_nodes_searchandrescue(circle_center, base_type_name, swarm
             counts[node_type] = counts.get(node_type, 0) + 1
             if 'group_index' in d:
                 group_indices.setdefault(node_type, []).append(d['group_index'])
-        nodes = generate_nodes_within_circle(circle_center, radius=50.0, node_counts=counts, min_relay_dist=50, swarm_type=base_counts, group_indices=group_indices)
+        nodes = []
+        if not environment_only:
+            nodes = generate_nodes_within_circle(circle_center, radius=50.0, node_counts=counts, min_relay_dist=50, swarm_type=base_counts, group_indices=group_indices)
+        # Target positions use Python's RNG, independent of NumPy's robot placement draws.
         env_task_nodes = [Node(type='environmentTask', task=10) for _ in range(environment_task_count)]
         boundary_nodes = generate_nodes_on_circle()
         base_nodes = nodes + env_task_nodes + boundary_nodes
-        task_info = {'range': range_area, 'node_count': len(nodes)}
+        task_info = {'range': range_area, 'node_count': len(node_dicts)}
         for s_type in sensitivity_types:
             relay_range = s_type['relay_range']
             action_range = s_type['action_range']
